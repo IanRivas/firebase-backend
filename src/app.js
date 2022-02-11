@@ -1,14 +1,25 @@
 const express = require('express');
 const morgan = require('morgan');
-const { db } = require('./firebase');
+const path = require('path');
+const exphbs = require('express-handlebars');
 
 const app = express();
 
-app.use(morgan('dev'));
+app.set('views', path.join(__dirname, 'views'));
+app.engine(
+  '.hbs',
+  exphbs.create({
+    defaultLayout: 'main',
+    extname: '.hbs',
+  }).engine
+);
+app.set('view engine', '.hbs');
 
-app.get('/', async (req, res) => {
-  const querySnapshot = await db.collection('contacts').get();
-  res.send(querySnapshot.docs[0].data()); //de lo que me da firebase , el primer documento , la data
-});
+app.use(morgan('dev'));
+app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
+app.use(require('./routes'));
+
+app.use('/public', express.static(path.join(__dirname, 'public')));
 
 module.exports = app;
